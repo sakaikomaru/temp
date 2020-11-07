@@ -1,6 +1,6 @@
 {-# LANGUAGE BangPatterns #-}
 
-module ZAlgorithme where
+module ZAlgorithm where
 
 import qualified Data.ByteString.Char8       as BSC8
 import qualified Data.ByteString.Unsafe      as BSU
