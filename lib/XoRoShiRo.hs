@@ -88,7 +88,7 @@ shuffle vec = withRNG $ \rng -> do
   VU.unsafeFreeze mv
 
 randomR :: RNG -> Int -> Int -> IO Int
-randomR rng l r = ((+ l) . flip mod (r - l + 1)) <$> nextInt rng
+randomR rng l r = (+ l) . flip mod (r - l + 1) <$> nextInt rng
 
 infixl 8 .<<., .>>., .>>>.
 infixl 6 .^.
