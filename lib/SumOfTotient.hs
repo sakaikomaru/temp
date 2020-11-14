@@ -32,20 +32,20 @@ sumOfTotient n = runST $ do
       m     = n `div` d
       sqrtm = floor . sqrt . fromIntegral $ m
       th    = v `div` d
-    total <- newSTRef (fi m * (fi (m + 1)) `div` 2)
+    total <- newSTRef (fi m * fi (m + 1) `div` 2)
     rep 1 th $ \i -> do
       item1 <- VM.unsafeRead sumL (d * i)
       item2 <- VUM.unsafeRead phi i
-      modifySTRef' total (subtract (item1 + (fi item2) * fi (m `div` i)))
+      modifySTRef' total (subtract (item1 + fi item2 * fi (m `div` i)))
     rep (th + 1) sqrtm $ \i -> do
       let
         t = m `div` i
       item1 <- VUM.unsafeRead sumS t
       item2 <- VUM.unsafeRead phi i
-      modifySTRef' total (subtract ((fi item1) + (fi item2) * (fi t)))
+      modifySTRef' total (subtract (fi item1 + fi item2 * fi t))
     item1 <- readSTRef total
     item2 <- VUM.unsafeRead sumS sqrtm
-    VM.unsafeWrite sumL d (item1 + (fi item2) * (fi sqrtm)) 
+    VM.unsafeWrite sumL d (item1 + fi item2 * fi sqrtm)
   VM.unsafeRead sumL 1
   where
     !v = floor . sqrt . fromIntegral $ n
@@ -63,7 +63,7 @@ stream !l !r = VFSM.Stream step l
   where
     step x
       | x <= r    = return $ VFSM.Yield x (x + 1)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] stream #-}
 
@@ -76,7 +76,7 @@ streamS !l !r !s = VFSM.Stream step l
   where
     step x
       | x <= r    = return $ VFSM.Yield x (x + s)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] streamS #-}
 
@@ -89,7 +89,7 @@ streamM !l !r !s = VFSM.Stream step l
   where
     step x
       | x <= r    = return $ VFSM.Yield x (x * s)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] streamM #-}
 
@@ -102,7 +102,7 @@ streamR !l !r = VFSM.Stream step r
   where
     step x
       | x >= l    = return $ VFSM.Yield x (x - 1)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] streamR #-}
 

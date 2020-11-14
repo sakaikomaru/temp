@@ -30,7 +30,7 @@ fI = fromInteger
 {-# INLINE fI #-}
 
 getNextRnd :: Int -> Int
-getNextRnd = (flip mod (maxBound :: Int)) . fI . _getNextRnd . fi
+getNextRnd = flip mod (maxBound :: Int) . fI . _getNextRnd . fi
 {-# INLINE getNextRnd #-}
 
 nextInt :: RNG -> IO Int
@@ -64,7 +64,7 @@ streamR !l !r = VFSM.Stream step (r - 1)
   where
     step x
       | x >= l    = return $ VFSM.Yield x (x - 1)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] streamR #-}
 

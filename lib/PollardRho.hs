@@ -88,7 +88,7 @@ millerRabin k
         loop (a:as)
           | powModInt a d n /= 1 && allok = False
           | otherwise = loop as
-          where allok = all (\r -> (powModInt a ((1 .<<. r) * d) n) /= m) [0..(s - 1)]
+          where allok = all (\r -> powModInt a ((1 .<<. r) * d) n /= m) [0..(s - 1)]
 
 powModInt :: Int -> Int -> Int -> Int
 powModInt a n mo = fI $ GMP.powModInteger (fi a) (fi n) (fi mo)
@@ -115,12 +115,12 @@ ctz = countTrailingZeros
 
 ceilPow2 :: Int -> Int
 ceilPow2 n
-  | n > 1     = (-1) .>>>. (clz (n - 1)) + 1
+  | n > 1     = (-1) .>>>. clz (n - 1) + 1
   | otherwise = 1
 
 floorPow2 :: Int -> Int
 floorPow2 n
-  | n >= 1    = 1 .<<. (63 - (clz n))
+  | n >= 1    = 1 .<<. (63 - clz n)
   | otherwise = 0
 
 fi :: Int -> Integer

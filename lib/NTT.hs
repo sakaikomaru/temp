@@ -105,7 +105,7 @@ growToPowerOfTwo :: VU.Vector Int -> VU.Vector Int
 growToPowerOfTwo v
   | VU.null v = VU.singleton 0
   | VU.length v == 1 = v
-  | n <- (-1) .>>>. (countTrailingZeros (VU.length v - 1)) + 1
+  | n <- (-1) .>>>. countTrailingZeros (VU.length v - 1) + 1
     = v VU.++ VU.replicate (n - VU.length v) 0
 
 ntt :: Int -> Int -> VU.Vector Int -> VU.Vector Int
@@ -192,7 +192,7 @@ stream !l !r = VFSM.Stream step l
   where
     step x
       | x < r     = return $ VFSM.Yield x (x + 1)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] stream #-}
 
@@ -254,12 +254,12 @@ recipModInt a mo = fI $ GMP.recipModInteger (fi a) (fi mo)
 
 ceilPow2 :: Int -> Int
 ceilPow2 n
-  | n > 1     = (-1) .>>>. (countLeadingZeros (n - 1)) + 1
+  | n > 1     = (-1) .>>>. countLeadingZeros (n - 1) + 1
   | otherwise = 1
 
 floorPow2 :: Int -> Int
 floorPow2 n
-  | n >= 1    = 1 .<<. (63 - (countLeadingZeros n))
+  | n >= 1    = 1 .<<. (63 - countLeadingZeros n)
   | otherwise = 0
 
 ctzceilpow2 :: Int -> Int

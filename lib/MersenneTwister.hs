@@ -73,7 +73,7 @@ nextWord64 mt19937 = do
     else VUM.unsafeModify mt19937 (+2) _pointer >> return ptr
   y <- VUM.unsafeRead mt19937 (fromIntegral mti)
   z <- VUM.unsafeRead mt19937 (fromIntegral mti + (1 :: Int))
-  return $ ((fromIntegral :: Word32 -> Word64) (shiftAndXor y)) .<<. 32 .|. ((fromIntegral :: Word32 -> Word64) (shiftAndXor z))
+  return $ (fromIntegral :: Word32 -> Word64) (shiftAndXor y) .<<. 32 .|. (fromIntegral :: Word32 -> Word64) (shiftAndXor z)
 
 nextInt :: Mt19937 -> IO Int
 nextInt = unsafeCoerce <$> nextWord64
@@ -144,7 +144,7 @@ streamR !l !r = VFSM.Stream step (r - 1)
   where
     step x
       | x >= l    = return $ VFSM.Yield x (x - 1)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] streamR #-}
 

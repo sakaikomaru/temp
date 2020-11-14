@@ -102,7 +102,7 @@ instance Bits a => Poset (SetOrd a) where
   (.<.) (SetOrd x) (SetOrd y) = x .&. y == x
   {-# INLINE (.<.) #-}
   moebius (SetOrd x) (SetOrd y)
-    | not $ (SetOrd x) .<. (SetOrd y) = 0
+    | not $ SetOrd x .<. SetOrd y = 0
     | testBit (popCount $ complement x .&. y) 0 = -1
     | otherwise = 1
 
@@ -202,7 +202,7 @@ millerRabin k
         loop (a:as)
           | powModInt a d n /= 1 && allok = False
           | otherwise = loop as
-          where allok = all (\r -> (powModInt a ((1 .<<. r) * d) n) /= m) [0..(s - 1)]
+          where allok = all (\r -> powModInt a ((1 .<<. r) * d) n /= m) [0..(s - 1)]
 
 powModInt :: Int -> Int -> Int -> Int
 powModInt a n mo = fI $ GMP.powModInteger (fi a) (fi n) (fi mo)
@@ -229,12 +229,12 @@ ctz = countTrailingZeros
 
 ceilPow2 :: Int -> Int
 ceilPow2 n
-  | n > 1     = (-1) .>>>. (clz (n - 1)) + 1
+  | n > 1     = (-1) .>>>. clz (n - 1) + 1
   | otherwise = 1
 
 floorPow2 :: Int -> Int
 floorPow2 n
-  | n >= 1    = 1 .<<. (63 - (clz n))
+  | n >= 1    = 1 .<<. (63 - clz n)
   | otherwise = 0
 
 fi :: Int -> Integer
@@ -269,7 +269,7 @@ stream !l !r = VFSM.Stream step l
   where
     step x
       | x < r     = return $ VFSM.Yield x (x + 1)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] stream #-}
 
@@ -282,7 +282,7 @@ streamR !l !r = VFSM.Stream step (r - 1)
   where
     step x
       | x >= l    = return $ VFSM.Yield x (x - 1)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] streamR #-}
 

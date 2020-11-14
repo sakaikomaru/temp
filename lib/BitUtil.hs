@@ -48,13 +48,13 @@ decode32x2 xy =
 
 ceilPow2 :: Int -> Int
 ceilPow2 n
-  | n > 1     = (-1) .>>>. (clz (n - 1)) + 1
+  | n > 1     = (-1) .>>>. clz (n - 1) + 1
   | otherwise = 1
 {-# INLINE ceilPow2 #-}
 
 floorPow2 :: Int -> Int
 floorPow2 n
-  | n >= 1    = 1 .<<. (63 - (clz n))
+  | n >= 1    = 1 .<<. (63 - clz n)
   | otherwise = 0
 {-# INLINE floorPow2 #-}
 

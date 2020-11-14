@@ -21,7 +21,7 @@ stream !l !r = VFSM.Stream step l
   where
     step x
       | x < r     = return $ VFSM.Yield x (x + 1)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] stream #-}
 

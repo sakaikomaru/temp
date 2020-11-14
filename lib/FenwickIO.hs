@@ -133,5 +133,5 @@ clz = countLeadingZeros
 
 floorPow2 :: Int -> Int
 floorPow2 n
-  | n >= 1    = 1 .<<. (63 - (clz n))
+  | n >= 1    = 1 .<<. (63 - clz n)
   | otherwise = 0

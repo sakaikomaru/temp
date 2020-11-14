@@ -3,6 +3,7 @@
 module For where
 
 import           Control.Monad.Cont
+import           Control.Monad.ST
 import           Data.Bits
 import qualified Data.Vector.Fusion.Stream.Monadic as VFSM
 
@@ -11,7 +12,7 @@ stream !l !r = VFSM.Stream step l
   where
     step x
       | x < r     = return $ VFSM.Yield x (x + 1)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] stream #-}
 
@@ -32,7 +33,7 @@ streamR !l !r = VFSM.Stream step (r - 1)
   where
     step x
       | x >= l    = return $ VFSM.Yield x (x - 1)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] streamR #-}
 
@@ -53,7 +54,7 @@ streamStep !l !r !d = VFSM.Stream step l
   where
     step x
       | x < r     = return $ VFSM.Yield x (x + d)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] streamStep #-}
 
@@ -70,7 +71,7 @@ streamHalf !l !r = VFSM.Stream step r
   where
     step x
       | x > l     = return $ VFSM.Yield x (x `div` 2)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] streamHalf #-}
 
@@ -83,7 +84,7 @@ streamBit !l !r = VFSM.Stream step l
   where
     step x
       | x < (1 .<<. r) = return $ VFSM.Yield x (x + 1)
-      | otherwise      = return $ VFSM.Done
+      | otherwise      = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] streamBit #-}
 
@@ -101,6 +102,10 @@ infixl 8 .<<., .>>.
 (.>>.) = unsafeShiftR
 {-# INLINE (.>>.) #-}
 
-withBreak :: ((r -> ContT r IO b) -> ContT r IO r) -> IO r
-withBreak = flip runContT pure . callCC
-{-# INLINE withBreak #-}
+withBreakIO :: ((r -> ContT r IO b) -> ContT r IO r) -> IO r
+withBreakIO = flip runContT pure . callCC
+{-# INLINE withBreakIO #-}
+
+withBreakST :: ((r -> ContT r (ST s) b) -> ContT r (ST s) r) -> (ST s) r
+withBreakST = flip runContT pure . callCC
+{-# INLINE withBreakST #-}

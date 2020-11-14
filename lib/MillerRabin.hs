@@ -32,7 +32,7 @@ millerRabin k
         loop (a:as)
           | powModInt a d n /= 1 && allok = False
           | otherwise = loop as
-          where allok = all (\r -> (powModInt a ((1 .<<. r) * d) n) /= m) $ [0..(s - 1)]
+          where allok = all (\r -> powModInt a ((1 .<<. r) * d) n /= m) [0..(s - 1)]
 
 infixl 8 .<<., .>>.
 

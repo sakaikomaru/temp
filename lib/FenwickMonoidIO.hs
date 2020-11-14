@@ -53,7 +53,7 @@ mappendAt' :: (Semigroup a, VU.Unbox a) => FenwickMonoidTree a -> Int -> a -> IO
 mappendAt' (FenwickMonoidTree fmt) k v = flip fix (k + 1) $ \loop !i -> do
   when (i < n) $ do
     VUM.unsafeModify fmt (<> v) i
-    loop $ (i + (i .&. (-i)))
+    loop (i + (i .&. (-i)))
   where !n = VUM.length fmt
 {-# INLINE mappendAt' #-}
 
@@ -62,6 +62,6 @@ mappendAt :: (Semigroup a, VU.Unbox a) => FenwickMonoidTree a -> Int -> a -> IO 
 mappendAt (FenwickMonoidTree fmt) k v = flip fix k $ \loop !i -> do
   when (i < n) $ do
     VUM.unsafeModify fmt (<> v) i
-    loop $ (i + (i .&. (-i)))
+    loop (i + (i .&. (-i)))
   where !n = VUM.length fmt
 {-# INLINE mappendAt #-}

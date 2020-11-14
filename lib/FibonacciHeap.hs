@@ -70,4 +70,4 @@ heapSort :: Ord a => [a] -> [a]
 heapSort = hsort . fromListFH 
   where
     hsort Empty = []
-    hsort h     = (findMinFH h) : (hsort $ deleteMinFH h)
+    hsort h     = findMinFH h : hsort (deleteMinFH h)

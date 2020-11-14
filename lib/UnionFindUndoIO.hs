@@ -69,7 +69,7 @@ data UnionFindUndo = UFU
   }
 
 newUFU :: Int -> IO UnionFindUndo
-newUFU n = UFU <$> VUM.replicate n (-1 :: Int) <*> (newVecStack defaultVecStackSize)
+newUFU n = UFU <$> VUM.replicate n (-1 :: Int) <*> newVecStack defaultVecStackSize
 
 findUFU :: UnionFindUndo -> Int -> IO Int
 findUFU ufu@(UFU info _) k = do
@@ -128,7 +128,7 @@ stream !l !r = VFSM.Stream step l
   where
     step x
       | x < r     = return $ VFSM.Yield x (x + 1)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] stream #-}
 

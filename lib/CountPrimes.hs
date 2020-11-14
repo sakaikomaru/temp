@@ -63,7 +63,7 @@ stream !l !r !d = VFSM.Stream step l
   where
     step x
       | x <= r    = return $ VFSM.Yield x (x + d)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] stream #-}
 
@@ -76,7 +76,7 @@ streamR !l !r = VFSM.Stream step r
   where
     step x
       | x >= l    = return $ VFSM.Yield x (x - 1)
-      | otherwise = return $ VFSM.Done
+      | otherwise = return VFSM.Done
     {-# INLINE [0] step #-}
 {-# INLINE [1] streamR #-}
 
