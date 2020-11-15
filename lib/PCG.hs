@@ -7,6 +7,7 @@ module PCG where
 import           Data.Bits
 import           Data.Word
 import           GHC.Exts
+import           System.CPUTime
 import           Unsafe.Coerce
 import qualified Data.Vector.Fusion.Stream.Monadic as VFSM
 import qualified Data.Vector.Unboxed               as VU
@@ -27,7 +28,9 @@ increment = 0x14057b7ef767814f
 type RNG = VUM.IOVector Word64
 
 newRNG :: IO RNG
-newRNG = VUM.replicate 1 seed
+newRNG = do
+  t <- fromInteger <$> getCPUTime
+  VUM.replicate 1 (seed + t)
 
 nextWord32 :: RNG -> IO Word32
 nextWord32 rng = do
