@@ -140,10 +140,10 @@ fmtXOR vec = VU.create $ do
   return g
 
 
-{- 最大公約数によるゼータ変換とメビウス変換
+{- 約数によるゼータ変換とメビウス変換
 bitANDとbitORによるゼータ変換とメビウス変換では部分集合の包含関係によって
 和を求めるスコアを選んでいた
-最大公約数によるゼータ変換とメビウス変換ではある部分集合の包含を、約数かどうか
+約数によるゼータ変換とメビウス変換ではある部分集合の包含を、約数かどうか
 によって考え、得点の総和を求める
 S  = {0, 1, 2, 3, 4, 5, 6, 7}
 S  =  3  1  4  1  5  9  2  6
@@ -153,8 +153,8 @@ S6 =  6 (= 1, 2, 3, 6)
 T  =  1 + 4 + 1 + 2 = 8
 Zeta = 3, 1, 5, 2, 10, 10, 8, 7
 -}
-fztGCD :: VU.Vector Int -> VU.Vector Int
-fztGCD vec = VU.create $ do
+fztDIV :: VU.Vector Int -> VU.Vector Int
+fztDIV vec = VU.create $ do
   let !n = VU.length vec
   sieve <- VUM.replicate n True
   g <- VU.unsafeThaw vec
@@ -165,8 +165,8 @@ fztGCD vec = VU.create $ do
       VUM.unsafeModify g (+(vec VU.! k)) (k * p)
   return g
 
-fmtGCD :: VU.Vector Int -> VU.Vector Int
-fmtGCD vec = VU.create $ do
+fmtDIV :: VU.Vector Int -> VU.Vector Int
+fmtDIV vec = VU.create $ do
   let !n = VU.length vec
   sieve <- VUM.replicate n True
   g <- VU.unsafeThaw vec
