@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns     #-}
 {-# LANGUAGE MagicHash        #-}
 {-# LANGUAGE TypeApplications #-}
 
@@ -7,7 +8,9 @@ import           Data.Bits
 import           Data.Word
 import           GHC.Exts
 import           Unsafe.Coerce
-import qualified Data.Vector.Unboxed.Mutable as VUM
+import qualified Data.Vector.Fusion.Stream.Monadic as VFSM
+import qualified Data.Vector.Unboxed               as VU
+import qualified Data.Vector.Unboxed.Mutable       as VUM
 
 seed :: Word64
 seed = 0x4d595df4d0f33173
@@ -63,6 +66,18 @@ nextGauss rng mu sigma = do
 randomR :: RNG -> Int -> Int -> IO Int
 randomR rng l r = (+ l) . flip mod (r - l + 1) <$> nextInt rng
 
+shuffleM :: VUM.Unbox a => RNG -> VUM.IOVector a -> IO ()
+shuffleM rng mvec = do
+  rev (VUM.length mvec) $ \i -> do
+    j <- nextWord rng
+    VUM.unsafeSwap mvec i (unsafeCoerce $ rem j (unsafeCoerce i + 1))
+
+shuffle :: VU.Unbox a => RNG -> VU.Vector a -> IO (VU.Vector a)
+shuffle rng vec = do
+  mv <- VU.unsafeThaw vec
+  shuffleM rng mv
+  VU.unsafeFreeze mv
+
 infixr 8 .>>@.
 infixl 8 .<<., .>>., .>>>.
 infixl 6 .^.
@@ -86,3 +101,16 @@ infixl 6 .^.
 (.>>@.) :: Word32 -> Int -> Word32
 x .>>@. k = x .>>. k .|. x .<<. ((-k) .&. 31)
 {-# INLINE (.>>@.) #-}
+
+streamR :: Monad m => Int -> Int -> VFSM.Stream m Int
+streamR !l !r = VFSM.Stream step (r - 1)
+  where
+    step x
+      | x >= l    = return $ VFSM.Yield x (x - 1)
+      | otherwise = return VFSM.Done
+    {-# INLINE [0] step #-}
+{-# INLINE [1] streamR #-}
+
+rev :: Monad m => Int -> (Int -> m ()) -> m ()
+rev n = flip VFSM.mapM_ (streamR 0 n)
+{-# INLINE rev #-}
