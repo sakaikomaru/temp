@@ -1,7 +1,7 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE MagicHash    #-}
 
-module Hadamar where
+module FastZetaMoebiusTransform where
 
 import           Control.Monad
 import           Control.Monad.Cont
