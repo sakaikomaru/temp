@@ -162,7 +162,7 @@ fztDIV vec = VU.create $ do
     b <- VUM.unsafeRead sieve p
     when b $ forG 1 (n - 1) (*) p (+) 1 $ \k -> do
       VUM.unsafeWrite sieve (k * p) False
-      VUM.unsafeModify g (+(vec VU.! k)) (k * p)
+      VUM.unsafeModify g (+(vec VU.! (k * p))) k
   return g
 
 fmtDIV :: VU.Vector Int -> VU.Vector Int
@@ -174,7 +174,7 @@ fmtDIV vec = VU.create $ do
     b <- VUM.unsafeRead sieve p
     when b $ forR ((n - 1) `div` p) 1 1 $ \k -> do
       VUM.unsafeWrite sieve (k * p) False
-      VUM.unsafeModify g (subtract (vec VU.! k)) (k * p)
+      VUM.unsafeModify g (subtract (vec VU.! (k * p))) k
   return g
 
 growVU :: VU.Vector Int -> VU.Vector Int
