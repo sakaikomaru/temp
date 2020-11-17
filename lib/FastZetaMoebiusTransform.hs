@@ -54,6 +54,29 @@ fmtAND vec = VU.create $ do
     VUM.unsafeModify g (subtract item) j
   return g
 
+{- fztMaxAND
+S = { 3, 1, 4, 1, 5, 9, 2, 6 }
+0b11111111 -> max (3, 1, 4, 1, 5, 9, 2, 6) = 9 
+0b01010101 -> max (   1,    1,    9,    6) = 9
+0b00110011 -> max (      4, 1,       2, 6) = 6
+0b00010001 -> max (         1,          6) = 6
+0b00001111 -> max (            5, 9, 2, 6) = 9
+0b00000101 -> max (               9,    6) = 9
+0b00000011 -> max (                  2, 6) = 6
+0b00000001 -> max (                     6) = 6
+-}
+
+fztMaxAND :: VU.Vector Int -> VU.Vector Int
+fztMaxAND vec = VU.create $ do
+  let
+    !f = growVU vec
+    !n = VU.length f
+  g <- VU.unsafeThaw f
+  forG 1 (n - 1) const 0 unsafeShiftL 1 $ \i -> rep n $ \j -> when (j .&. i == 0) $ do
+    item <- VUM.unsafeRead g (j .|. i)
+    VUM.unsafeModify g (max item) j
+  return g
+
 {- ゼータ変換とメビウス変換(bitOR)
 上位集合のときには部分集合{1}を含んでいる部分集合Tについての総和を求めた。
 これに対して部分集合{1}が含んでいる部分集合Tについての総和を求めるものがこれ
