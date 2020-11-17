@@ -1,124 +1,105 @@
 {-# LANGUAGE BangPatterns     #-}
+{-# LANGUAGE BinaryLiterals   #-}
 {-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TypeFamilies     #-}
 
 module MersenneTwister where
 
+import           Control.Monad
 import           Data.Bits
 import           Data.Word
-import           System.CPUTime
 import           Unsafe.Coerce
-import qualified Data.Vector.Fusion.Stream.Monadic as VFSM 
+
+import qualified Data.Vector.Fusion.Stream.Monadic as VFSM
 import qualified Data.Vector.Unboxed               as VU
 import qualified Data.Vector.Unboxed.Mutable       as VUM
 
-_matrixA :: Word32
-_matrixA = 0x9908b0df
-{-# INLINE _matrixA #-}
-
-_upperMask :: Word32
-_upperMask = 0x80000000
-{-# INLINE _upperMask #-}
-
-_lowerMask :: Word32
-_lowerMask = 0x7fffffff
-{-# INLINE _lowerMask #-}
+{- https://en.wikipedia.org/wiki/Mersenne_Twister -}
 
 _pointer :: Int
-_pointer = 624
+_pointer = 312
 {-# INLINE _pointer #-}
 
-type Mt19937 = VUM.IOVector Word32
+_lowerMask :: Word64
+_lowerMask = 0b0000000000000000000000000000000001111111111111111111111111111111
+{-# INLINE _lowerMask #-}
 
-newRNG :: IO Mt19937
-newRNG = do
-  seed    <- (fromInteger :: Integer -> Word32) <$> getCPUTime
-  mt19937 <- VUM.unsafeNew (625 :: Int)
-  VUM.unsafeWrite mt19937 _pointer 0
-  VUM.unsafeWrite mt19937 0 seed
-  let
-    set :: Int -> IO ()
-    set mti = do
-      o <- VUM.unsafeRead mt19937 (mti - 1)
-      let v = 1812433253 * (o .^. (o .>>. 30)) + fromIntegral mti
-      VUM.unsafeWrite mt19937 mti v
-  mapM_ set [1..623]
-  return mt19937
+_upperMask :: Word64
+_upperMask = 0b1111111111111111111111111111111110000000000000000000000000000000
+{-# INLINE _upperMask #-}
 
-shiftAndXor :: Word32 -> Word32
+type MT19937 = VUM.IOVector Word64
+
+-- 0 .. 311 data
+--         312 ptr
+
+newMT19937 :: Word64 -> IO MT19937
+newMT19937 seed = do
+  mt <- VUM.unsafeNew 313 :: IO MT19937
+  VUM.unsafeWrite mt _pointer 312
+  VUM.unsafeWrite mt 0 seed
+  flip VFSM.mapM_ (stream 1 311 1) $ \mti -> do
+    item <- VUM.unsafeRead mt (mti - 1)
+    let rnd = 6364136223846793005 * (item .^. (item .>>. 62)) + unsafeCoerce @Int @Word64 mti
+    VUM.unsafeWrite mt mti rnd
+  return mt
+
+shiftAndXor :: Word64 -> Word64
 shiftAndXor w0 =
-  let
-    w1 = w0 .^.  (w0 .>>. 11)
-    w2 = w1 .^. ((w1 .<<. 7 ) .&. 0x9d2c5680)
-    w3 = w2 .^. ((w2 .<<. 15) .&. 0xefc60000)
-    w4 = w3 .^.  (w3 .>>. 18)
-  in
-    w4
-{-# INLINE shiftAndXor #-}
+  case w0 .^. ((w0 .>>. 29) .&. 0x5555555555555555) of
+    w1 -> case w1 .^. ((w1 .<<. 17) .&. 0x71D67FFFEDA60000) of
+      w2 -> case w2 .^. ((w2 .<<. 37) .&. 0xFFF7EEE000000000) of
+        w3 -> w3 .^. (w3 .>>. 43)
 
-nextWord32 :: Mt19937 -> IO Word32
-nextWord32 mt19937 = do
-  ptr <- VUM.unsafeRead mt19937 _pointer
-  mti <- if ptr >= (624 :: Word32)
-    then VUM.unsafeWrite mt19937 _pointer 0 >> step mt19937 >> return 0
-    else VUM.unsafeModify mt19937 succ _pointer >> return ptr
-  y   <- VUM.unsafeRead mt19937 (fromIntegral mti)
-  return $ shiftAndXor y
+twist :: MT19937 -> IO ()
+twist mt = do
+  rep 312 $ \i -> do
+    item1 <- VUM.unsafeRead mt i
+    item2 <- VUM.unsafeRead mt ((i + 1) `mod` 312)
+    let
+      x  = (item1 .&. _upperMask) + (item2 .&. _lowerMask)
+      xA = x .>>. 1
+      xa  = if odd x then xA .^. 0xB5026F5AA96619E9 else xA
+    item3 <- VUM.unsafeRead mt ((i + 156) `mod` 312)
+    VUM.unsafeWrite mt i (item3 .^. xa)
+  VUM.unsafeWrite mt _pointer 0
 
-nextWord64 :: Mt19937 -> IO Word64
-nextWord64 mt19937 = do
-  ptr <- VUM.unsafeRead mt19937 _pointer
-  mti <- if ptr >= (623 :: Word32)
-    then VUM.unsafeWrite mt19937 _pointer 0 >> step mt19937 >> return 0
-    else VUM.unsafeModify mt19937 (+2) _pointer >> return ptr
-  y <- VUM.unsafeRead mt19937 (fromIntegral mti)
-  z <- VUM.unsafeRead mt19937 (fromIntegral mti + (1 :: Int))
-  return $ (fromIntegral :: Word32 -> Word64) (shiftAndXor y) .<<. 32 .|. (fromIntegral :: Word32 -> Word64) (shiftAndXor z)
+nextWord64 :: MT19937 -> IO Word64
+nextWord64 mt = do
+  idx <- VUM.unsafeRead mt _pointer
+  when (idx >= 312) $ twist mt
+  y <- shiftAndXor <$> VUM.unsafeRead mt (fromIntegral idx)
+  VUM.unsafeModify mt succ _pointer
+  return y
 
-nextInt :: Mt19937 -> IO Int
-nextInt = unsafeCoerce <$> nextWord64
+nextInt :: MT19937 -> IO Int
+nextInt mt = unsafeCoerce <$> nextWord64 mt
 
-nextWord :: Mt19937 -> IO Word
-nextWord = unsafeCoerce <$> nextInt
+nextWord :: MT19937 -> IO Word
+nextWord mt = unsafeCoerce <$> nextWord64 mt
 
-nextDouble :: Mt19937 -> IO Double
+nextDouble :: MT19937 -> IO Double
 nextDouble mt19937 = do
   t <- nextWord64 mt19937
   let x = 0x3ff .<<. 52 .|. t .>>. 12
   return $! unsafeCoerce @Word64 @Double x - 1.0
 
-nextGauss :: Mt19937 -> Double -> Double -> IO Double
+nextGauss :: MT19937 -> Double -> Double -> IO Double
 nextGauss mt19937 mu sigma = do
   x <- nextDouble mt19937
   y <- nextDouble mt19937
   let z = sqrt (-2.0 * log x) * cos (2.0 * pi * y)
   return $! sigma * z + mu
 
-randomR :: Mt19937 -> (Int, Int) -> IO Int
-randomR mt19937 (l, r) = flip mod (r - l + 1) <$> nextInt mt19937
+randomR :: MT19937 -> Int -> Int -> IO Int
+randomR mt19937 l r = (+ l) . flip mod (r - l + 1) <$> nextInt mt19937
 
-step :: Mt19937 -> IO ()
-step mt = do
-  let
-    mag01 :: Word32 -> Word32
-    mag01 x = if odd x then _matrixA else 0
-    set :: Int -> IO ()
-    set kk = do
-      mtkk  <- VUM.unsafeRead mt kk
-      mtkk1 <- VUM.unsafeRead mt ((kk + 1) `mod` (624 :: Int))
-      mtkkm <- VUM.unsafeRead mt ((kk + 397) `mod` (624 :: Int))
-      let y = (mtkk .&. _upperMask) .|. (mtkk1 .&. _lowerMask)
-          v = mtkkm .^. (y .>>. 1) .^. mag01 y
-      VUM.unsafeWrite mt kk v
-  mapM_ set [0..623]
-
-shuffleM :: VUM.Unbox a => Mt19937 -> VUM.IOVector a -> IO ()
+shuffleM :: VUM.Unbox a => MT19937 -> VUM.IOVector a -> IO ()
 shuffleM mt19937 mvec = do
   rev (VUM.length mvec) $ \i -> do
     j <- nextWord64 mt19937
     VUM.unsafeSwap mvec i (unsafeCoerce $ rem j (unsafeCoerce i + 1))
 
-shuffle :: VU.Unbox a => Mt19937 -> VU.Vector a -> IO (VU.Vector a)
+shuffle :: VU.Unbox a => MT19937 -> VU.Vector a -> IO (VU.Vector a)
 shuffle mt19937 vec = do
   mv <- VU.unsafeThaw vec
   shuffleM mt19937 mv
@@ -138,6 +119,20 @@ infixl 6 .^.
 (.^.) :: Bits b => b -> b -> b
 (.^.) = xor
 {-# INLINE (.^.) #-}
+
+-- for (int x = l; x <= r; x += d)
+stream :: Monad m => Int -> Int -> Int -> VFSM.Stream m Int
+stream !l !r !d = VFSM.Stream step l
+  where
+    step x
+      | x <= r    = return $ VFSM.Yield x (x + d)
+      | otherwise = return VFSM.Done
+    {-# INLINE [0] step #-}
+{-# INLINE [1] stream #-}
+
+rep :: Monad m => Int -> (Int -> m ()) -> m ()
+rep n = flip VFSM.mapM_ (stream 0 (n - 1) 1)
+{-# INLINE rep #-}
 
 streamR :: Monad m => Int -> Int -> VFSM.Stream m Int
 streamR !l !r = VFSM.Stream step (r - 1)
