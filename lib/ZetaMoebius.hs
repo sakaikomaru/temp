@@ -12,11 +12,6 @@ import qualified Data.Vector.Fusion.Stream.Monadic as VFSM
 import qualified Data.Vector.Unboxed               as VU
 import qualified Data.Vector.Unboxed.Mutable       as VUM
 
-test :: IO ()
-test = do
-  let xs = VU.replicate 1 (0 :: Int) VU.++ VU.replicate 20  (1 :: Int)
-  print $ fztDIV xs
-
 fztAND, fmtAND, fztOR, fmtOR, fztXOR, fmtXOR, fztDIV, fmtDIV :: VU.Vector Int -> VU.Vector Int
 fztAND vec = VU.create $ do
   let
