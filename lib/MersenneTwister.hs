@@ -35,7 +35,7 @@ type MT19937 = VUM.IOVector Word64
 newMT19937 :: Word64 -> IO MT19937
 newMT19937 seed = do
   mt <- VUM.unsafeNew 313 :: IO MT19937
-  VUM.unsafeWrite mt _pointer 312
+  VUM.unsafeWrite mt _pointer 0
   VUM.unsafeWrite mt 0 seed
   flip VFSM.mapM_ (stream 1 311 1) $ \mti -> do
     item <- VUM.unsafeRead mt (mti - 1)
