@@ -17,7 +17,7 @@ rev1   => [(n - 1) .. 1]
 rev1'  => [n .. 1]
 range  => for (int i = l; i <= r; i++);
 rangeR => for (int i = r; i >= l; i--);
-forP   => for (int i = 2; i * i < p; i++);
+forP   => for (int i = 2; i * i <= p; i++);
 forG   => for (int i = l; f(i, p) <= r; g(i,d));
 forRG  => for (int i = r; f(i, p) >= l; g(i,d));
 -}
@@ -63,7 +63,7 @@ rangeR r l = flip VFSM.mapM_ (streamRG r l const 0 (-) 1)
 {-# INLINE rangeR #-}
 
 forP :: Monad m => Int -> (Int -> m ()) -> m ()
-forP p = flip VFSM.mapM_ (streamG 2 (p - 1) (^) 2 (+) 1)
+forP p = flip VFSM.mapM_ (streamG 2 p (^) 2 (+) 1)
 {-# INLINE forP #-}
 
 forG :: Monad m => Int -> Int -> (Int -> Int -> Int) -> Int -> (Int -> Int -> Int) -> Int -> (Int -> m ()) -> m ()
