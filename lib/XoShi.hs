@@ -5,8 +5,8 @@ module XoShi where
 
 import           Data.Bits
 import           Data.Word
+import           System.CPUTime
 import           Unsafe.Coerce
-import           Data.Time.Clock.POSIX       (getPOSIXTime)
 import qualified Data.Vector.Fusion.Stream.Monadic as VFSM
 import qualified Data.Vector.Unboxed               as VU
 import qualified Data.Vector.Unboxed.Mutable       as VUM
@@ -15,11 +15,8 @@ type RNG = VUM.IOVector Word64
 
 getSeed :: IO Word64
 getSeed = do
-  t <- getPOSIXTime
-  let ret = floor $ t * 1e9 :: Word64
-  if ret == 0
-    then getSeed
-    else return ret
+  t <- getCPUTime
+  return (fromInteger t * 0x3b47f24a)
 
 newRNG :: IO RNG
 newRNG = do
