@@ -7,6 +7,23 @@ import           Data.Bits
 import           Data.Word
 import           GHC.Exts
 import           Unsafe.Coerce
+import qualified GHC.Integer.GMP.Internals         as GMP
+
+fi :: Int -> Integer
+fi = fromIntegral
+{-# INLINE fi #-}
+
+fI :: Integer -> Int
+fI = fromInteger
+{-# INLINE fI #-}
+
+powModInt :: Int -> Int -> Int -> Int
+powModInt a b c = fI $ GMP.powModInteger (fi a) (fi b) (fi c)
+{-# INLINE powModInt #-}
+
+recipModInt :: Int -> Int -> Int
+recipModInt a m = fI $ GMP.recipModInteger (fi a) (fi m)
+{-# INLINE recipModInt #-}
 
 infixl 8 .<<., .>>., .>>>.
 infixl 6 .^.
