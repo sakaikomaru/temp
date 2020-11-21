@@ -7,7 +7,6 @@ import           Control.Monad.Cont
 import           Control.Monad.ST
 import           Data.Bits
 import           GHC.Exts
-
 import qualified Data.Vector.Fusion.Stream.Monadic as VFSM
 import qualified Data.Vector.Unboxed               as VU
 import qualified Data.Vector.Unboxed.Mutable       as VUM
@@ -180,7 +179,6 @@ withBreakST = flip runContT pure . callCC
 rep :: Monad m => Int -> (Int -> m ()) -> m ()
 rep n = flip VFSM.mapM_ (streamG 0 (n - 1) const 0 (+) 1)
 
-
 {- fztAND
 S = { 3, 1, 4, 1, 5, 9, 2, 6 }               fzt S
 0b11111111 -> 3 + 1 + 4 + 1 + 5 + 9 + 2 + 6 =  31
@@ -237,4 +235,3 @@ T   = {  3,  4,  2,  6,  2,  4,  4,  5,  2,  6,  2,  6 }
 12 = { 1, 2, 3, 4, 6, 12 }
 20 = { 1, 2, 4, 5, 10, 20 }
 -}
-
