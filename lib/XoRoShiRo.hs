@@ -8,7 +8,7 @@ module XoRoShiRo where
 import           Data.Bits
 import           GHC.Exts
 import           Unsafe.Coerce
-import           Data.Time.Clock.POSIX
+import           System.CPUTime
 import qualified Data.Vector.Fusion.Stream.Monadic as VFSM
 import qualified Data.Vector.Unboxed.Mutable       as VUM
 import qualified Data.Vector.Unboxed               as VU
@@ -17,11 +17,8 @@ type RNG = VUM.IOVector Word
 
 getSeed :: IO Word
 getSeed = do
-  t <- getPOSIXTime
-  let ret = floor $ t * 1e9 :: Word
-  if ret == 0
-    then getSeed
-    else return ret
+  t <- getCPUTime
+  return (fromInteger t * 0x73fe981a)
 
 splitMix64 :: Word -> (Word, Word)
 splitMix64 state = case state + 0x9e3779b97f4a7c15 of
