@@ -89,6 +89,24 @@ transposeMat a = VU.create $ do
     VUM.unsafeWrite b (j * sz + i) (a VU.! (i * sz + j))
   return b
 
+takeNthRow :: Int -> SquareMatrixMint -> VU.Vector Mint
+takeNthRow n a = VU.create $ do
+  let
+    !m  = VU.length a
+    !sz = floor . sqrt . fromIntegral $ m
+  b <- VUM.unsafeNew sz :: ST s (VUM.STVector s Mint)
+  rep sz $ \i -> VUM.unsafeWrite b i (a VU.! ((n - 1) * sz + i))
+  return b
+
+takeNthCol :: Int -> SquareMatrixMint -> VU.Vector Mint
+takeNthCol n a = VU.create $ do
+  let
+    !m  = VU.length a
+    !sz = floor . sqrt . fromIntegral $ m
+  b <- VUM.unsafeNew sz :: ST s (VUM.STVector s Mint)
+  rep sz $ \i -> VUM.unsafeWrite b i (a VU.! (i * sz + (n - 1)))
+  return b
+
 modulus :: Num a => a
 modulus = MOD
 {-# INLINE modulus #-}
