@@ -107,6 +107,39 @@ takeNthCol n a = VU.create $ do
   rep sz $ \i -> VUM.unsafeWrite b i (a VU.! (i * sz + (n - 1)))
   return b
 
+determinant :: Int -> SquareMatrixMint -> Mint
+determinant sz a = runST $ do
+  retRef <- newSTRef (1 :: Mint)
+  b      <- VU.unsafeThaw a
+  withBreakST $ \break -> rep sz $ \i -> do
+    c <- lift $ check b (-1) i
+    if c == (-1)
+      then do
+        lift $ writeSTRef retRef 0
+        break ()
+      else do
+        when (c /= i) $ lift $ modifySTRef retRef (*(-1))
+        rep sz $ \j -> lift $ VUM.unsafeSwap b (c * sz + j) (i * sz + j)
+        itemii <- VUM.unsafeRead b (i * sz + i)
+        lift $ modifySTRef retRef (*itemii)
+        let inva = (1 :: Mint) / itemii
+        range (i + 1) (sz - 1) $ \j -> do
+          a0 <- VUM.unsafeRead b (j * sz + i)
+          range i (sz - 1) $ \k -> do
+            item <- VUM.unsafeRead b (i * sz + k)
+            VUM.unsafeModify b (subtract (inva * a0 * item)) (j * sz + k)
+  readSTRef retRef
+  where
+    check :: VUM.STVector s Mint -> Int -> Int -> ST s Int
+    check mvec ptr idx = do
+      pRef <- newSTRef ptr
+      withBreakST $ \break -> range idx (sz - 1) $ \j -> do
+        item <- VUM.unsafeRead mvec (j * sz + idx)
+        when (item /= 0) $ do
+          lift $ writeSTRef pRef j
+          break ()
+      readSTRef pRef
+
 modulus :: Num a => a
 modulus = MOD
 {-# INLINE modulus #-}
