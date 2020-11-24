@@ -140,6 +140,9 @@ determinant sz a = runST $ do
           break ()
       readSTRef pRef
 
+trace :: Int -> SquareMatrixMint -> Mint
+trace n = VU.ifoldl' (\a i b -> if i `mod` (n + 1) == 0 then a + b else a) (0 :: Mint)
+
 modulus :: Num a => a
 modulus = MOD
 {-# INLINE modulus #-}
