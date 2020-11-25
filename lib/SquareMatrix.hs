@@ -18,6 +18,7 @@ import           Control.Monad.ST
 import           Data.Bits
 import           Data.Bool
 import           Data.Coerce
+import           Data.STRef.Strict
 import qualified Data.Ratio                        as R
 import           GHC.Exts
 import qualified Data.Vector.Fusion.Stream.Monadic as VFSM
