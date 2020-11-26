@@ -12,6 +12,7 @@ import           Data.Bits
 import           Data.Bool
 import           Data.Word
 import           GHC.Exts
+import           System.CPUTime
 import           Unsafe.Coerce
 import qualified GHC.Integer.GMP.Internals         as GMP
 import qualified Data.Vector.Fusion.Stream.Monadic as VFSM
@@ -44,6 +45,11 @@ newMT19937 seed = do
     let rnd = 6364136223846793005 * (item .^. (item .>>. 62)) + unsafeCoerce @Int @Word64 mti
     VUM.unsafeWrite mt mti rnd
   return mt
+
+newRNG :: IO MT19937
+newRNG = do
+  t <- (fromInteger :: Integer -> Word64) <$> getCPUTime
+  newMT19937 t
 
 shiftAndXor :: Word64 -> Word64
 shiftAndXor w0 =
