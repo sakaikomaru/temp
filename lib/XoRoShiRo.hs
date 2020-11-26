@@ -10,8 +10,8 @@ import           GHC.Exts
 import           Unsafe.Coerce
 import           System.CPUTime
 import qualified Data.Vector.Fusion.Stream.Monadic as VFSM
-import qualified Data.Vector.Unboxed.Mutable       as VUM
 import qualified Data.Vector.Unboxed               as VU
+import qualified Data.Vector.Unboxed.Mutable       as VUM
 
 type RNG = VUM.IOVector Word
 
@@ -84,7 +84,6 @@ shuffle vec = withRNG $ \rng -> do
   shuffleM rng mv
   VU.unsafeFreeze mv
 
--- [l, r]
 randomR :: RNG -> Int -> Int -> IO Int
 randomR rng l r = (+ l) . flip mod (r - l + 1) <$> nextInt rng
 
