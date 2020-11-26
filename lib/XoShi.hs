@@ -55,9 +55,7 @@ nextGauss rng mu sigma = do
   return $! sigma * z + mu
 
 randomR :: RNG -> Int -> Int -> IO Int
-randomR rng l r = do
-  x <- nextInt rng
-  return $ x `mod` (r - l + 1) + l
+randomR rng l r = (+ l) . flip mod (r - l + 1) <$> nextInt rng
 
 shuffleM :: VUM.Unbox a => RNG -> VUM.IOVector a -> IO ()
 shuffleM rng mvec = do
