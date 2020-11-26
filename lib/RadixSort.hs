@@ -12,7 +12,7 @@ import qualified Data.Vector.Unboxed         as VU
 import qualified Data.Vector.Unboxed.Mutable as VUM
 
 radixSort64 :: VU.Vector Word64 -> VU.Vector Word64
-radixSort64 vword = F.foldl' step vword [0,16,32,48]
+radixSort64 vword = F.foldl' step vword ([0,16,32,48] :: [Int])
   where
     mask k x = fromIntegral $ x .>>. k .&. 0xffff
     step v k = VU.create $ do
@@ -41,7 +41,7 @@ radixSortNonNegative = VU.map decodeNonNegative64 . radixSort64 . VU.map encodeN
 {-# INLINE radixSortNonNegative #-}
 
 radixSort32 :: VU.Vector Word32 -> VU.Vector Word32
-radixSort32 vec = F.foldl' step vec [0, 16]
+radixSort32 vec = F.foldl' step vec ([0, 16] :: [Int])
   where
     mask k x = fromIntegral $ x .>>. k .&. 0xffff
     step v k = VU.create $ do
