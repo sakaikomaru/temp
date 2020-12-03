@@ -74,6 +74,24 @@ forRG :: Monad m => Int -> Int -> (Int -> Int -> Int) -> Int -> (Int -> Int -> I
 forRG r l f p g d = flip VFSM.mapM_ (streamRG r l f p g d)
 {-# INLINE forRG #-}
 
+stream :: Monad m => Int -> Int -> VFSM.Stream m Int
+stream !l !r = VFSM.Stream step l
+  where
+    step x
+      | x < r     = return $ VFSM.Yield x (x + 1)
+      | otherwise = return VFSM.Done
+    {-# INLINE [0] step #-}
+{-# INLINE [1] stream #-}
+
+streamR :: Monad m => Int -> Int -> VFSM.Stream m Int
+streamR !l !r = VFSM.Stream step (r - 1)
+  where
+    step x
+      | x >= l = return $ VFSM.Yield x (x - 1)
+      | otherwise = return VFSM.Done
+    {-# INLINE [0] step #-}
+{-# INLINE [1] streamR #-}
+
 streamG :: Monad m => Int -> Int -> (Int -> Int -> Int) -> Int -> (Int -> Int -> Int) -> Int -> VFSM.Stream m Int
 streamG !l !r !f !p !g !d = VFSM.Stream step l
   where
