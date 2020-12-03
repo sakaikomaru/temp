@@ -89,3 +89,7 @@ bitReverse
     step :: Int -> Word64 -> Word64 -> Word64 -> Word64
     step i ml mr = \ !x -> (x .&. ml) .>>. i .|. (x .&. mr) .<<. i
     {-# INLINE step #-}
+
+ctzceilpow2 :: Int -> Int
+ctzceilpow2 = countTrailingZeros . ceilPow2
+{-# INLINE ctzceilpow2 #-}
